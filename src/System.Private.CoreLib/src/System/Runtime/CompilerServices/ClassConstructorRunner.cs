@@ -53,9 +53,9 @@ namespace System.Runtime.CompilerServices
             return nonGcStaticBase;
         }
 
-        private unsafe static object CheckStaticClassConstructionReturnThreadStaticBase(TypeManagerSlot* pModuleData, Int32 typeTlsIndex, StaticClassConstructionContext* context)
+        private unsafe static object CheckStaticClassConstructionReturnThreadStaticBase(TypeTlsRecord* tlsRecord, StaticClassConstructionContext* context)
         {
-            object threadStaticBase = ThreadStatics.GetThreadStaticBaseForType(pModuleData, typeTlsIndex);
+            object threadStaticBase = ThreadStatics.GetThreadStaticBaseForType(tlsRecord);
             EnsureClassConstructorRun(context);
             return threadStaticBase;
         }

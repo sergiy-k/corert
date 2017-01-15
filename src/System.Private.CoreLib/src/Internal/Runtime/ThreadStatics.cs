@@ -18,12 +18,13 @@ namespace Internal.Runtime
         /// This method is called from a ReadyToRun helper to get base address of thread
         /// static storage for the given type.
         /// </summary>
-        internal static unsafe object GetThreadStaticBaseForType(TypeManagerSlot* pModuleData, Int32 typeTlsIndex)
+        internal static unsafe object GetThreadStaticBaseForType(TypeTlsRecord* tlsRecord)
         {
             // Get the array that holds thread static memory blocks for each type in the given module
-            Int32 moduleIndex = pModuleData->ModuleIndex;
+            Int32 moduleIndex = tlsRecord->ModuleData->ModuleIndex;
             object[] storage = (object[])RuntimeImports.RhGetThreadStaticStorageForModule(moduleIndex);
 
+            Int32 typeTlsIndex = tlsRecord->TypeTlsIndex;
             // Check whether thread static storage has already been allocated for this module and type.
             if ((storage != null) && (typeTlsIndex < storage.Length) && (storage[typeTlsIndex] != null))
             {
@@ -35,7 +36,7 @@ namespace Internal.Runtime
             storage = EnsureThreadStaticStorage(moduleIndex, storage, requiredSize: typeTlsIndex + 1);
 
             // Allocate an object that will represent a memory block for all thread static fields of the type
-            object threadStaticBase = AllocateThreadStaticStorageForType(pModuleData->TypeManager, typeTlsIndex);
+            object threadStaticBase = AllocateThreadStaticStorageForType(tlsRecord);
             storage[typeTlsIndex] = threadStaticBase;
 
             return threadStaticBase;
@@ -74,15 +75,30 @@ namespace Internal.Runtime
         /// This method allocates an object that represents a memory block for all thread static fields of the type
         /// that corresponds to the specified TLS index.
         /// </summary>
-        private static unsafe object AllocateThreadStaticStorageForType(IntPtr typeManager, Int32 typeTlsIndex)
+        private static unsafe object AllocateThreadStaticStorageForType(TypeTlsRecord* tlsRecord)
         {
-            Int32 length;
-            IntPtr* threadStaticRegion;
+            // Allocate an object to store thread statics data. Layout of the object is determine
+            // by the EEType that represents a memory map for thread statics storage.
+            return RuntimeImports.RhNewObject(new EETypePtr(tlsRecord->EETypeForMemoryMap));
+        }
+    }
 
-            // Get a pointer to the beginning of the module's Thread Static section. Then get a pointer
-            // to the EEType that represents a memory map for thread statics storage.
-            threadStaticRegion = (IntPtr*)RuntimeImports.RhGetModuleSection(typeManager, ReadyToRunSectionType.ThreadStaticRegion, out length);
-            return RuntimeImports.RhNewObject(new EETypePtr(threadStaticRegion[typeTlsIndex]));
+    /// <summary>
+    /// This structure represents a record in the thread statics region.
+    /// It contains information required to obtain the base address of
+    /// thread static fields of a type.
+    /// </summary>
+    internal unsafe struct TypeTlsRecord
+    {
+        public TypeManagerSlot* ModuleData;
+        public Int32 TypeTlsIndex;
+        public IntPtr EETypeForMemoryMap;
+
+        public TypeTlsRecord(Int32 tls)
+        {
+            ModuleData = (TypeManagerSlot*)0;
+            TypeTlsIndex = tls;
+            EETypeForMemoryMap = IntPtr.Zero;   
         }
     }
 }

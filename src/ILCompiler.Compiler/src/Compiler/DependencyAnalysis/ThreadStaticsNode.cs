@@ -62,6 +62,15 @@ namespace ILCompiler.DependencyAnalysis
         {
             builder.RequirePointerAlignment();
 
+            int typeTlsIndex = 0;
+            if (!relocsOnly)
+            {
+                typeTlsIndex = factory.ThreadStaticsRegion.IndexOfEmbeddedObject(this);
+            }
+
+            builder.EmitPointerReloc(factory.TypeManagerIndirection);
+            builder.EmitNaturalInt(typeTlsIndex);
+
             // At runtime, an instance of the GCStaticEEType will be created and a GCHandle to it
             // will be written in this location.
             builder.EmitPointerReloc(GetGCStaticEETypeNode(factory));
