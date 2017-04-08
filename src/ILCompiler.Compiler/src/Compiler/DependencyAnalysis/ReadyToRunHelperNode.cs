@@ -124,9 +124,11 @@ namespace ILCompiler.DependencyAnalysis
                     {
                         var createInfo = (DelegateCreationInfo)_target;
                         sb.Append("__DelegateCtor_");
+                        if (createInfo.TargetNeedsVTableLookup)
+                            sb.Append("FromVtbl_");
                         createInfo.Constructor.AppendMangledName(nameMangler, sb);
                         sb.Append("__");
-                        createInfo.Target.AppendMangledName(nameMangler, sb);
+                        sb.Append(nameMangler.GetMangledMethodName(createInfo.TargetMethod));
                         if (createInfo.Thunk != null)
                         {
                             sb.Append("__");
@@ -157,6 +159,21 @@ namespace ILCompiler.DependencyAnalysis
                     DependencyList dependencyList = new DependencyList();
                     dependencyList.Add(factory.VirtualMethodUse((MethodDesc)_target), "ReadyToRun Virtual Method Call");
                     return dependencyList;
+                }
+            }
+            else if (_id == ReadyToRunHelperId.DelegateCtor)
+            {
+                var info = (DelegateCreationInfo)_target;
+                if (info.PerformsVirtualDispatch)
+                {
+#if !SUPPORT_JIT
+                    if (!factory.CompilationModuleGroup.ShouldProduceFullVTable(info.TargetMethod.OwningType))
+#endif
+                    {
+                        DependencyList dependencyList = new DependencyList();
+                        dependencyList.Add(factory.VirtualMethodUse(info.TargetMethod), "ReadyToRun Delegate to virtual method");
+                        return dependencyList;
+                    }
                 }
             }
 
