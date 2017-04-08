@@ -1511,6 +1511,10 @@ namespace Internal.TypeSystem.Interop
             }
 
             // we don't support [IN,OUT] together yet, either IN or OUT
+            if (Out && In)
+            {
+                throw new NotSupportedException("No out and in support");
+            }
             Debug.Assert(!(Out && In));
 
             var safeHandleType = InteropTypes.GetSafeHandleType(Context);
