@@ -35,6 +35,13 @@ namespace Internal.IL.Stubs
             _importMetadata = targetMethod.GetPInvokeMethodMetadata();
             _interopStateManager = interopStateManager;
 
+            if (_importMetadata.Name == "FormatMessage")
+            {
+                PInvokeFlags fl = _importMetadata.Flags;
+                fl.CharSet = System.Runtime.InteropServices.CharSet.Unicode;
+                _importMetadata = new PInvokeMetadata("kernel32.dll", "FormatMessageW", fl);
+            }
+
             PInvokeFlags flags = new PInvokeFlags();
             if (targetMethod.IsPInvoke)
             {

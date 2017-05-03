@@ -58,8 +58,8 @@ namespace ILCompiler.DependencyAnalysis
 
                 var arrayType = (ArrayType)type;
 
-                if (!arrayType.ElementType.IsValueType)
-                    continue;
+                // if (!arrayType.ElementType.IsValueType)
+                //     continue;
 
                 // Go with a necessary type symbol. It will be upgraded to a constructed one if a constructed was emitted.
                 IEETypeNode arrayTypeSymbol = factory.NecessaryTypeSymbol(arrayType);
