@@ -216,7 +216,14 @@ namespace ILCompiler.DependencyAnalysis
                 {
                     // Get the declaring method for slot on the instantiated declaring type
                     int slot = VirtualMethodSlotHelper.GetVirtualMethodSlot(factory, declaringMethodForSlot, factory.Target.Abi != TargetAbi.ProjectN);
-                    Debug.Assert(slot != -1);
+
+                    if (slot == -1)
+                    {
+                        // This method doesn't have a slot. (At this time, this is only done for the Object.Finalize method)
+                        //Debug.Assert(declaringMethodForSlot.Name == "Finalize");
+                        System.Console.WriteLine($"\nVirtual slot warning: missing slot for '{declaringMethodForSlot.Name}'\n");
+                        continue;
+                    }
 
                     vertex = writer.GetTuple(
                         writer.GetUnsignedConstant(_externalReferences.GetIndex(containingTypeKeyNode)),

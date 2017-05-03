@@ -80,6 +80,7 @@ namespace ILCompiler
                 catch (TypeSystemException ex)
                 {
                     // TODO: fail compilation if a switch was passed
+                    System.Console.WriteLine($"\nCompilation warning: '{method.ToString()}', Exception: {ex.Message}'\n");
 
                     // Try to compile the method again, but with a throwing method body this time.
                     MethodIL throwingIL = TypeSystemThrowingILEmitter.EmitIL(method, ex);
