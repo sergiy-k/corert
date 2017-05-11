@@ -801,8 +801,20 @@ namespace Internal.JitInterface
 
         private bool isInSIMDModule(CORINFO_CLASS_STRUCT_* classHnd)
         {
-            // TODO: SIMD
-            return false;
+            TypeDesc type = HandleToObject(classHnd);
+            bool result = false;
+
+            if (type.IsDefType)
+            {
+                DefType defType = (DefType)type;
+                result = defType.Name.StartsWith("Vector", StringComparison.Ordinal) && defType.Namespace.Equals("System.Numerics", StringComparison.Ordinal);
+                if (result)
+                {
+                    Log.WriteLine("SIMD: '{0}'", defType.Name);
+                }
+            }
+
+            return result;
         }
 
         private CorInfoUnmanagedCallConv getUnmanagedCallConv(CORINFO_METHOD_STRUCT_* method)
@@ -1018,7 +1030,28 @@ namespace Internal.JitInterface
         }
 
         private int appendClassName(short** ppBuf, ref int pnBufLen, CORINFO_CLASS_STRUCT_* cls, bool fNamespace, bool fFullInst, bool fAssembly)
-        { throw new NotImplementedException("appendClassName"); }
+        {
+            DefType type = (DefType)HandleToObject(cls);
+            string name = type.ToString();
+            name = name.Replace("[System.Numerics.Vectors]", "");
+            name = name.Replace("[System.Private.CoreLib]", "");
+            name = name.Replace('<', '[');
+            name = name.Replace('>', ']');
+
+            int length = name.Length + 1;
+            if (pnBufLen > length)
+            {
+                short* buffer = *ppBuf;
+                for (int i = 0; i < name.Length; i++)
+                {
+                    buffer[i] = (short)name[i];
+                }
+                pnBufLen -= length;
+                *ppBuf = buffer + length;
+            }
+
+            return length;
+        }
 
         private bool isValueClass(CORINFO_CLASS_STRUCT_* cls)
         {

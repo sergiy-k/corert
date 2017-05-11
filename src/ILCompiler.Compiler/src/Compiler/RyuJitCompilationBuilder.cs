@@ -74,6 +74,8 @@ namespace ILCompiler
             if (_generateDebugInfo)
                 jitFlagBuilder.Add(CorJitFlag.CORJIT_FLAG_DEBUG_INFO);
 
+            jitFlagBuilder.Add(CorJitFlag.CORJIT_FLAG_FEATURE_SIMD);
+
             MetadataManager metadataManager = CreateMetadataManager();
 
             var factory = new RyuJitNodeFactory(_context, _compilationGroup, metadataManager, _nameMangler);
