@@ -15,20 +15,11 @@ class Program
 
     static int Main()
     {
-        SimpleReadWriteThreadStaticTest.Run(42, "SimpleReadWriteThreadStatic");
-
-        // TODO: After issue https://github.com/dotnet/corert/issues/2695 is fixed, move FinalizeTest to run at the end
-        if (FinalizeTest.Run() != Pass)
-            return Fail;
-
+        int start = Environment.TickCount;
         ThreadStaticsTestWithTasks.Run();
+        int end = Environment.TickCount;
 
-        if (ThreadTest.Run() != Pass)
-            return Fail;
-
-        if (TimerTest.Run() != Pass)
-            return Fail;
-
+        Console.WriteLine("Test duration: {0} ms", (end -start));
         return Pass;
     }
 }
@@ -155,7 +146,7 @@ class SimpleReadWriteThreadStaticTest
 class ThreadStaticsTestWithTasks
 {
     static object lockObject = new object();
-    const int TotalTaskCount = 32;
+    const int TotalTaskCount = 4;
 
     public static void Run()
     {
@@ -164,27 +155,41 @@ class ThreadStaticsTestWithTasks
         {
             tasks[i] = Task.Factory.StartNew((param) =>
             {
-                int index = (int)param;
-                int intTestValue = index * 10;
-                string stringTestValue = "ThreadStaticsTestWithTasks" + index;
-
-                // Try to run the on every other task
-                if ((index % 2) == 0)
-                {
-                    lock (lockObject)
-                    {
-                        SimpleReadWriteThreadStaticTest.Run(intTestValue, stringTestValue);
-                    }
-                }
-                else
-                {
-                    SimpleReadWriteThreadStaticTest.Run(intTestValue, stringTestValue);
-                }
+                RunGcTest((i + 1) * 32);
             }, i);
         }
         for (int i = 0; i < tasks.Length; ++i)
         {
             tasks[i].Wait();
+        }
+    }
+
+    public volatile static byte[] s_array1;
+    static volatile byte[] s_array2;
+    static volatile string[] s_stringArray;
+    const int ItemCount = 256;
+
+    private static void RunGcTest(int length)
+    {
+        byte[] array3;
+        byte[] array4;
+        string[] stringArray;
+        
+        stringArray = new string[ItemCount];
+
+        for (int i = 0; i < 100000; i++)
+        {
+            for (int j = 0; j < stringArray.Length; j++)
+            {
+                stringArray[j] = new string('a', length);
+            }
+
+            s_array1 = new byte[ItemCount];
+            s_array2 = new byte[ItemCount];
+            array3 = new byte[ItemCount];
+            array4 = new byte[ItemCount];
+
+            s_stringArray = stringArray;
         }
     }
 }
