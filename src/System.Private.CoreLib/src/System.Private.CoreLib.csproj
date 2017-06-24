@@ -24,6 +24,7 @@
     <ExcludeAssemblyInfoPartialFile>true</ExcludeAssemblyInfoPartialFile>
     <UseSyncTable>true</UseSyncTable>
     <DefineConstants>EETYPE_TYPE_MANAGER;ES_BUILD_PN;ES_SESSION_INFO;$(DefineConstants)</DefineConstants>
+    <EnableDummyGlobalizationImplementation>true</EnableDummyGlobalizationImplementation>
   </PropertyGroup>
   <PropertyGroup>
     <DefineConstants Condition="'$(UseSyncTable)' == 'true'">FEATURE_SYNCTABLE;$(DefineConstants)</DefineConstants>
