@@ -137,6 +137,43 @@ void StackFrameIterator::EnterInitialInvalidState(Thread * pThreadToWalk)
     m_ControlPC = 0;
 }
 
+struct AddressInfo
+{
+public:
+    void* _returnAddress;
+    void* _currentAddress;
+    void* _rsp;
+    void* _rax;
+    GCRefKind _gcKind;
+    char _r[7];
+};
+
+const int InfoCount = 2048;
+extern AddressInfo s_returnInfo[InfoCount];
+extern int s_returnIndex;
+
+void FindInfo(void* rip, void* rsp, void* rax)
+{
+    int i = s_returnIndex;
+    int j;
+    volatile int* exc = NULL;
+    for (j = 0; j < InfoCount; j++)
+    {
+        i--;
+        if (i < 0)
+        {
+            i = InfoCount - 1;
+        }
+
+        if ((s_returnInfo[i]._returnAddress == rip) && (s_returnInfo[i]._rsp == rsp))
+        {
+            s_returnInfo[i]._rax = rax;
+            break;
+        }
+    }
+
+    ASSERT(j < InfoCount);
+}
 // Prepare to start a stack walk from the context listed in the supplied PInvokeTransitionFrame.
 // The supplied frame can be TOP_OF_STACK_MARKER to indicate that there are no more managed
 // frames on the stack.  Otherwise, the context in the frame always describes a callsite
@@ -245,11 +282,13 @@ void StackFrameIterator::InternalInit(Thread * pThreadToWalk, PTR_PInvokeTransit
     {
         m_pHijackedReturnValue = (PTR_RtuObjectRef) m_RegDisplay.pRax;
         m_HijackedReturnValueKind = GCRK_Object;
+        FindInfo((void*)pFrame->m_RIP, (void*)m_RegDisplay.SP, *(void**)m_pHijackedReturnValue);
     }
     if (pFrame->m_dwFlags & PTFF_RAX_IS_BYREF)
     {
         m_pHijackedReturnValue = (PTR_RtuObjectRef) m_RegDisplay.pRax;
         m_HijackedReturnValueKind = GCRK_Byref;
+        FindInfo((void*)pFrame->m_RIP, (void*)m_RegDisplay.SP, *(void**)m_pHijackedReturnValue);
     }
 
 #endif // _TARGET_ARM_
