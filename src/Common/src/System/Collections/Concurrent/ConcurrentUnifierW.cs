@@ -338,7 +338,7 @@ namespace System.Collections.Concurrent
             [Conditional("DEBUG")]
             public void VerifyUnifierConsistency()
             {
-#if DEBUG
+#if _ENABLE_VERIFY_W_
                 // There's a point at which this check becomes gluttonous, even by checked build standards...
                 if (_nextFreeEntry >= 5000 || (0 != (_nextFreeEntry % 100)))
                     return;

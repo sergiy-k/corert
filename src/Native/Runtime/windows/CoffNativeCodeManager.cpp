@@ -427,13 +427,71 @@ bool CoffNativeCodeManager::UnwindStackFrame(MethodInfo *    pMethodInfo,
     return true;
 }
 
+EXTERN_C void * HELPER_NAME;
+
 bool CoffNativeCodeManager::GetReturnAddressHijackInfo(MethodInfo *    pMethodInfo,
                                                 REGDISPLAY *    pRegisterSet,       // in
                                                 PTR_PTR_VOID *  ppvRetAddrLocation, // out
                                                 GCRefKind *     pRetValueKind)      // out
 {
-    // @TODO: CORERT: GetReturnAddressHijackInfo
-    return false;
+    CoffNativeMethodInfo * pNativeMethodInfo = (CoffNativeMethodInfo *)pMethodInfo;
+
+    size_t unwindDataBlobSize;
+    PTR_VOID pUnwindDataBlob = GetUnwindDataBlob(m_moduleBase, pNativeMethodInfo->runtimeFunction, &unwindDataBlobSize);
+
+    PTR_UInt8 p = dac_cast<PTR_UInt8>(pUnwindDataBlob) + unwindDataBlobSize;
+
+    uint8_t unwindBlockFlags = *p++;
+
+    // Check whether this is a funclet
+    if ((unwindBlockFlags & UBF_FUNC_KIND_MASK) != UBF_FUNC_KIND_ROOT)
+        return false;
+
+    if ((unwindBlockFlags & UBF_FUNC_REVERSE_PINVOKE) != 0)
+        return false;
+
+    if ((unwindBlockFlags & UBF_FUNC_HAS_EHINFO) != 0)
+        p += sizeof(int32_t);
+
+    PTR_UInt8 controlPC = (PTR_UInt8)pRegisterSet->IP;
+    TADDR methodStartAddress = m_moduleBase + pNativeMethodInfo->mainRuntimeFunction->BeginAddress;
+    UInt32 codeOffset = (UInt32)(dac_cast<TADDR>(controlPC) - methodStartAddress);
+
+    if (codeOffset < ((UNWIND_INFO*)pUnwindDataBlob)->SizeOfProlog)
+        return false;
+
+    GcInfoDecoder decoder(
+        GCInfoToken(p),
+        GcInfoDecoderFlags(DECODE_PROLOG_LENGTH | DECODE_REVERSE_PINVOKE_VAR | DECODE_RETURN_KIND | GC_INFO_HAS_GS_COOKIE),
+        0
+        );
+
+    ReturnKind returnKind = decoder.GetReturnKind();
+    if (returnKind > ReturnKind::RT_ByRef)
+        return false;
+    GCRefKind gcRefKind = (GCRefKind)returnKind;
+
+    CONTEXT context;
+    context.Rsp = pRegisterSet->SP;
+    context.Rip = pRegisterSet->IP;
+
+    SIZE_T  EstablisherFrame;
+    PVOID   HandlerData;
+
+    RtlVirtualUnwind(NULL,
+                    dac_cast<TADDR>(m_moduleBase),
+                    pRegisterSet->IP,
+                    (PRUNTIME_FUNCTION)pNativeMethodInfo->runtimeFunction,
+                    &context,
+                    &HandlerData,
+                    &EstablisherFrame,
+                    NULL);
+
+    PTR_PTR_VOID pRetAddrLocation = (PTR_PTR_VOID)(context.Rsp - sizeof (PVOID));
+
+    *ppvRetAddrLocation = pRetAddrLocation;
+    *pRetValueKind = gcRefKind;
+    return true;
 }
 
 void CoffNativeCodeManager::UnsynchronizedHijackMethodLoops(MethodInfo * pMethodInfo)

@@ -21864,7 +21864,7 @@ void gc_heap::plan_phase (int condemned_gen_number)
                     else
                     {
 #ifdef SIMPLE_DPRINTF
-                        dprintf (3, ("(%Ix)[%Ix->%Ix, NA: [%Ix(%Id), %Ix[: %Ix(%d)",
+                        dprintf (1 /*22222*/, ("(%Ix)[%Ix->%Ix, NA: [%Ix(%Id), %Ix[: %Ix(%d)",
                             (size_t)(node_gap_size (plug_start)), 
                             plug_start, plug_end, (size_t)new_address, (size_t)(plug_start - new_address),
                                 (size_t)new_address + ps, ps, 
@@ -21901,7 +21901,7 @@ void gc_heap::plan_phase (int condemned_gen_number)
 
                 new_address = plug_start;
 
-                dprintf (3, ( "(%Ix)PP: [%Ix, %Ix[%Ix](m:%d)",
+                dprintf (1 /*22222*/, ( "(%Ix)PP: [%Ix, %Ix[%Ix](m:%d)",
                             (size_t)(node_gap_size (plug_start)), (size_t)plug_start,
                             (size_t)plug_end, ps,
                             (merge_with_last_pin_p ? 1 : 0)));
@@ -32036,7 +32036,7 @@ void gc_heap::descr_generations (BOOL begin_gc_p)
     {
         size_t total_gen_size = generation_size (curr_gen_number);
 #ifdef SIMPLE_DPRINTF
-        dprintf (GTC_LOG, ("[%s][g%d]gen %d:, size: %Id, frag: %Id(L: %Id, O: %Id), f: %d%% %s %s %s",
+        dprintf (1, ("[%s][g%d]gen %d:, size: %Id, frag: %Id(L: %Id, O: %Id), f: %d%% %s %s %s",
                       (begin_gc_p ? "BEG" : "END"),
                       settings.condemned_generation,
                       curr_gen_number,
@@ -33739,7 +33739,7 @@ void GCHeap::Relocate (Object** ppObject, ScanContext* sc,
     THREAD_NUMBER_FROM_CONTEXT;
 
     //dprintf (3, ("Relocate location %Ix\n", (size_t)ppObject));
-    dprintf (3, ("R: %Ix", (size_t)ppObject));
+    dprintf (1, ("RL: %Ix", (size_t)ppObject));
     
     if (object == 0)
         return;
@@ -33758,7 +33758,7 @@ void GCHeap::Relocate (Object** ppObject, ScanContext* sc,
     }
 #endif //_DEBUG
 
-    dprintf (3, ("Relocate %Ix\n", (size_t)object));
+    dprintf (1, ("RO %Ix\n", (size_t)object));
 
     uint8_t* pheader;
 
@@ -35499,7 +35499,7 @@ size_t GCHeap::GetValidSegmentSize(BOOL large_seg)
 // Get the max gen0 heap size, making sure it conforms.
 size_t GCHeap::GetValidGen0MaxSize(size_t seg_size)
 {
-    size_t gen0size = g_pConfig->GetGCgen0size();
+    size_t gen0size = 64 * 1024;//g_pConfig->GetGCgen0size();
 
     if ((gen0size == 0) || !g_theGCHeap->IsValidGen0MaxSize(gen0size))
     {
