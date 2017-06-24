@@ -744,7 +744,7 @@ REDHAWK_PALEXPORT void PalPrintFatalError(const char* message)
 size_t
 GetLogicalProcessorCacheSizeFromOS()
 {
-    size_t cacheSize = 0;
+    size_t cacheSize = 256 * 1024;
 
 #ifdef _SC_LEVEL1_DCACHE_SIZE
     cacheSize = max(cacheSize, sysconf(_SC_LEVEL1_DCACHE_SIZE));
