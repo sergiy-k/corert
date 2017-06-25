@@ -234,6 +234,7 @@ namespace System
         {
 #if PLATFORM_UNIX
             //throw new NotImplementedException();
+            timeZoneInfo = null;
             return false;
 #else
             TIME_DYNAMIC_ZONE_INFORMATION dtzi = new TIME_DYNAMIC_ZONE_INFORMATION();
