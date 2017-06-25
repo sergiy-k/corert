@@ -154,7 +154,8 @@ namespace System
         internal static Byte[] GetLocalTzFile()
         {
             // UNIXTODO
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
+            return null;
         }
 
         private static TimeZoneInfo GetLocalTimeZone(CachedData cachedData)
