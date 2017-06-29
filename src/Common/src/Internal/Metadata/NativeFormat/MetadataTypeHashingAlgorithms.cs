@@ -23,8 +23,11 @@ namespace Internal.Metadata.NativeFormat
             {
                 AppendNamespaceHashCode(ref builder, parentHandle.ToNamespaceDefinitionHandle(reader), reader);
                 string namespaceNamePart = reader.GetString(namespaceDefinition.Name);
-                builder.Append(namespaceNamePart);
-                builder.Append(".");
+                if (namespaceNamePart != null)
+                {
+                    builder.Append(namespaceNamePart);
+                    builder.Append(".");
+                }
             }
             else
             {
@@ -43,8 +46,11 @@ namespace Internal.Metadata.NativeFormat
             {
                 AppendNamespaceHashCode(ref builder, parentHandle.ToNamespaceReferenceHandle(reader), reader);
                 string namespaceNamePart = reader.GetString(namespaceReference.Name);
-                builder.Append(namespaceNamePart);
-                builder.Append(".");
+                if (namespaceNamePart != null)
+                {
+                    builder.Append(namespaceNamePart);
+                    builder.Append(".");
+                }
             }
             else
             {

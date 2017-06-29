@@ -31,7 +31,7 @@ namespace System.Threading
         /// It should by high enough to provide sufficient number of thread pool workers
         /// in case if some threads get blocked while running user code.
         /// </summary>
-        private static readonly int MaxThreadCount = 4 * ThreadPoolGlobals.processorCount;
+        private static readonly int MaxThreadCount = 2 * ThreadPoolGlobals.processorCount;
 
         /// <summary>
         /// Semaphore that is used to release waiting thread pool workers when new work becomes available.
