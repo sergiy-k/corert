@@ -30,3 +30,39 @@ extern "C" void CoreLibNative_Exit(int32_t exitCode)
 {
     exit(exitCode);
 }
+
+// TODO: OSX support
+extern char **environ;
+extern "C" int32_t CoreLibNative_GetEnumerateEnvironmentVariables(char* buffer, int32_t bufferSize)
+{
+	char** sourceEnviron = environ;
+	int32_t variableCount = 0;
+	int32_t charsWritten = 0;
+
+	while (sourceEnviron[variableCount] != nullptr)
+	{
+		char* evn = sourceEnviron[variableCount];
+		char c;
+		while (true)
+		{
+			if (charsWritten >= bufferSize)
+				return charsWritten;
+
+			c = *env;
+			if (c == '\0')
+			{
+				buffer[charsWritten++] = ';';
+				break;
+			}
+			else
+			{
+				buffer[charsWritten++] = c;
+			}
+
+			env++;
+		}
+		variableCount++;
+	}
+
+	return charsWritten;
+}

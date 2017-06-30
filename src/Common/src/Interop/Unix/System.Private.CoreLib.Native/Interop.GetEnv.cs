@@ -12,5 +12,7 @@ internal static partial class Interop
     {
         [DllImport(Interop.Libraries.CoreLibNative, EntryPoint = "CoreLibNative_GetEnv")]
         internal static extern unsafe IntPtr GetEnv(string name);
+        [DllImport(Interop.Libraries.CoreLibNative, EntryPoint = "CoreLibNative_GetEnumerateEnvironmentVariables", SetLastError = true)]
+        internal static extern unsafe int GetEnumerateEnvironmentVariables([Out] char[] buffer, int bufferSize);
     }
 }

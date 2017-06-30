@@ -27,10 +27,39 @@ namespace Internal.Runtime.Augments
 
         public static IEnumerable<KeyValuePair<string,string>> EnumerateEnvironmentVariables()
         {
-            if ("".Length != 0)
-                throw new NotImplementedException(); // Need to return something better than an empty environment block.
+            string bufferString = null;
+            int currentBufferSize = 1024;
 
-            return Array.Empty<KeyValuePair<string,string>>();
+            for (;;)
+            {
+                char[] buffer = ArrayPool<char>.Shared.Rent(currentBufferSize);
+
+                // Get full path to the executable image
+                int charactersWritten = Interop.Sys.GetEnumerateEnvironmentVariables(buffer, buffer.Length);
+
+                if (charactersWritten < buffer.Length)
+                {
+                    bufferString = new string(buffer, 0, charactersWritten);
+                    ArrayPool<char>.Shared.Return(buffer);
+                    break;
+                }
+
+                ArrayPool<char>.Shared.Return(buffer);
+                currentBufferSize *= 2;
+            }
+
+            return ParseEnvironmentVariables(stringBuffer);
+        }
+
+        private static IEnumerable<KeyValuePair<string,string>> ParseEnvironmentVariables(string stringBuffer)
+        {
+            string[] pairs = stringBuffer.Split(new char[] {';'});
+
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                string[] key_value = pairs[i].Split(new char[] {'='});
+                yield return new KeyValuePair<string, string>(key_value[0].Trim(), key_value[1].Trim());
+            }
         }
     }
 }
