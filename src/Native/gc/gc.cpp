@@ -35499,7 +35499,7 @@ size_t GCHeap::GetValidSegmentSize(BOOL large_seg)
 // Get the max gen0 heap size, making sure it conforms.
 size_t GCHeap::GetValidGen0MaxSize(size_t seg_size)
 {
-    size_t gen0size = 64 * 1024;//g_pConfig->GetGCgen0size();
+    size_t gen0size = g_pConfig->GetGCgen0size();
 
     if ((gen0size == 0) || !g_theGCHeap->IsValidGen0MaxSize(gen0size))
     {

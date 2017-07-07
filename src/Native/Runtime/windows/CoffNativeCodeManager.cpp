@@ -434,15 +434,14 @@ public:
     void* _currentAddress;
     void* _rsp;
     void* _rax;
+    int32_t   _suspendCount;
     GCRefKind _gcKind;
-    char _r[7];
+    char _r[3];
 };
 
 const int InfoCount = 2048;
 AddressInfo s_returnInfo[InfoCount];
 int s_returnIndex = 0;
-
-EXTERN_C void * HELPER_NAME;
 
 bool CoffNativeCodeManager::GetReturnAddressHijackInfo(MethodInfo *    pMethodInfo,
                                                 REGDISPLAY *    pRegisterSet,       // in
@@ -467,13 +466,6 @@ bool CoffNativeCodeManager::GetReturnAddressHijackInfo(MethodInfo *    pMethodIn
 
     if ((unwindBlockFlags & UBF_FUNC_HAS_EHINFO) != 0)
         p += sizeof(int32_t);
-
-    PTR_UInt8 controlPC = (PTR_UInt8)pRegisterSet->IP;
-    TADDR methodStartAddress = m_moduleBase + pNativeMethodInfo->mainRuntimeFunction->BeginAddress;
-    UInt32 codeOffset = (UInt32)(dac_cast<TADDR>(controlPC) - methodStartAddress);
-
-    if (codeOffset < ((UNWIND_INFO*)pUnwindDataBlob)->SizeOfProlog)
-        return false;
 
     GcInfoDecoder decoder(
         GCInfoToken(p),
@@ -504,19 +496,16 @@ bool CoffNativeCodeManager::GetReturnAddressHijackInfo(MethodInfo *    pMethodIn
 
     PTR_PTR_VOID pRetAddrLocation = (PTR_PTR_VOID)(context.Rsp - sizeof (PVOID));
 
-    if (gcRefKind != GCRefKind::GCRK_Scalar)
-    {
-        s_returnInfo[s_returnIndex]._returnAddress = *pRetAddrLocation;
-        s_returnInfo[s_returnIndex]._currentAddress = (void*)controlPC;
-        s_returnInfo[s_returnIndex]._rsp = (void*)context.Rsp;
-        s_returnInfo[s_returnIndex]._rax = (void*)-1;
-        s_returnInfo[s_returnIndex]._gcKind = gcRefKind;
-        s_returnIndex++;
-        if (s_returnIndex >= InfoCount)
-        {
-            s_returnIndex = 0;
-        }
-    }
+    // s_returnInfo[s_returnIndex]._returnAddress = *pRetAddrLocation;
+    // s_returnInfo[s_returnIndex]._currentAddress = (void*)pRegisterSet->IP;
+    // s_returnInfo[s_returnIndex]._rsp = (void*)context.Rsp;
+    // s_returnInfo[s_returnIndex]._rax = (void*)-1;
+    // s_returnInfo[s_returnIndex]._gcKind = gcRefKind;
+    // s_returnIndex++;
+    // if (s_returnIndex >= InfoCount)
+    // {
+    //     s_returnIndex = 0;
+    // }
 
     *ppvRetAddrLocation = pRetAddrLocation;
     *pRetValueKind = gcRefKind;
